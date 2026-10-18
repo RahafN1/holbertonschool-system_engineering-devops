@@ -1,109 +1,152 @@
 # 0. Simple web stack
 
-Design of a one-server web infrastructure hosting the website reachable at
-`www.foobar.com`.
+A one-server web infrastructure hosting the website reachable at
+**www.foobar.com**.
 
-Diagram: see `0-simple_web_stack.svg` (whiteboard-style drawing of this design).
+## Diagram
 
-## Diagram (text version)
+Diagram link:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Arial, Helvetica, sans-serif" font-size="14" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTozZDQzZDM2Mi05NTgzLTQ5NzktOTIwYi0wZjI2MmIzMWU4ZDMAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaH3ZpMEoWYUUo4sLY22oAlEAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDo2YmE5ZDUzYy03YzBlLTQzY2UtYmNhYi1lYTQwMDdiOTU4MzZscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoUiWneca3R2Jn4JvnwdtpmAAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggSjZC9bxb6dsggEvMOjhkua0v20zeii+iP2+D+g5bMtSkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaBvRdSki9eSHZaUiwtrHjvwAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCBe8HZjCvetNg49ut0D84eM19ore5Zj2Zfr53WA0JU7hGRuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBi3Zmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjNkNDNkMzYyLTk1ODMtNDk3OS05MjBiLTBmMjYyYjMxZThkMy9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjFlMGQ4YmY3LTczM2YtNDEyMC04NjMxLTExZjM4NmU4MWQxMXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCBKNkL1vFvp2yCAS8w6OGS5rS/bTN6KL6I/b4P6Dlsy1KJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFgge8LVhOaOZH3uPNseCBLK+IvXsv4/D0G+zAWu/+ewNliiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg0LMoIhsfGeaOvDjJGHV9rm5Uft2iSW9uVfodxW4xe+90Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQCNy3An+/QbeZ6AGncy4qRtD1slWNvGGM5uoriKhWnFvCAnpDaan7Vol9y+9WWQ8PeaxJEocHVi2yF8V8/CG7Wg=</c2pa:manifest></metadata>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#222"/></marker>
+  </defs>
+  <rect width="900" height="560" fill="#fff"/>
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="bold">Simple web stack: www.foobar.com</text>
 
-```
-   +--------+       1. www.foobar.com ?        +-------------------+
-   |  User  | -------------------------------> |  DNS (foobar.com) |
-   |(browser)| <------------------------------- |  www -> 8.8.8.8   |
-   +--------+       2. answer: 8.8.8.8         +-------------------+
-       |
-       | 3. HTTP/HTTPS request (TCP/IP) to 8.8.8.8 (port 80/443)
-       v
-+--------------------------- Server 8.8.8.8 ---------------------------+
-|                                                                       |
-|   +---------+   dynamic requests   +--------------------+             |
-|   |  Nginx  | -------------------> | Application server |             |
-|   |  (web   | <------------------- | (runs the code)    |             |
-|   | server) |    generated page    +----------+---------+             |
-|   +---------+                         |        |                       |
-|        |  static files                |        | SQL queries           |
-|        v                              v        v                       |
-|   +-----------------+      +----------------+  +----------------+     |
-|   | Static content  |      | Application    |  | MySQL database |     |
-|   | (images, css)   |      | files          |  | (data storage) |     |
-|   +-----------------+      | (code base)    |  +----------------+     |
-|                            +----------------+                         |
-+-----------------------------------------------------------------------+
-```
+  <rect x="40" y="70" width="170" height="70" rx="8" fill="#e8f1ff" stroke="#222" stroke-width="2"/>
+  <text x="125" y="100" text-anchor="middle" font-weight="bold">User</text>
+  <text x="125" y="122" text-anchor="middle">(web browser)</text>
+
+  <rect x="620" y="70" width="240" height="70" rx="8" fill="#fff6dd" stroke="#222" stroke-width="2"/>
+  <text x="740" y="97" text-anchor="middle" font-weight="bold">DNS - foobar.com</text>
+  <text x="740" y="120" text-anchor="middle">www  A  8.8.8.8</text>
+
+  <line x1="210" y1="95" x2="618" y2="95" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="414" y="86" text-anchor="middle">1. www.foobar.com ?</text>
+  <line x1="618" y1="125" x2="212" y2="125" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="414" y="145" text-anchor="middle">2. answer: 8.8.8.8</text>
+
+  <line x1="125" y1="140" x2="125" y2="238" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="135" y="195">3. HTTP/HTTPS request</text>
+  <text x="135" y="213">(TCP/IP) to 8.8.8.8</text>
+
+  <rect x="40" y="240" width="820" height="290" rx="10" fill="#f6f6f6" stroke="#222" stroke-width="3"/>
+  <text x="450" y="268" text-anchor="middle" font-weight="bold" font-size="16">Server - 8.8.8.8</text>
+
+  <rect x="70" y="300" width="170" height="80" rx="8" fill="#d9f2d9" stroke="#222" stroke-width="2"/>
+  <text x="155" y="335" text-anchor="middle" font-weight="bold">Nginx</text>
+  <text x="155" y="357" text-anchor="middle">(web server)</text>
+
+  <rect x="350" y="300" width="190" height="80" rx="8" fill="#ffe3d1" stroke="#222" stroke-width="2"/>
+  <text x="445" y="335" text-anchor="middle" font-weight="bold">Application server</text>
+  <text x="445" y="357" text-anchor="middle">(executes the code)</text>
+
+  <rect x="650" y="300" width="180" height="80" rx="8" fill="#e6dcf7" stroke="#222" stroke-width="2"/>
+  <text x="740" y="335" text-anchor="middle" font-weight="bold">MySQL</text>
+  <text x="740" y="357" text-anchor="middle">(database)</text>
+
+  <rect x="350" y="440" width="190" height="64" rx="8" fill="#fff" stroke="#222" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="445" y="468" text-anchor="middle" font-weight="bold">Application files</text>
+  <text x="445" y="488" text-anchor="middle">(code base)</text>
+
+  <rect x="70" y="440" width="170" height="64" rx="8" fill="#fff" stroke="#222" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="155" y="468" text-anchor="middle" font-weight="bold">Static content</text>
+  <text x="155" y="488" text-anchor="middle">(images, CSS, JS)</text>
+
+  <line x1="240" y1="325" x2="348" y2="325" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="294" y="315" text-anchor="middle" font-size="12">dynamic</text>
+  <line x1="348" y1="360" x2="242" y2="360" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="294" y="376" text-anchor="middle" font-size="12">response</text>
+
+  <line x1="540" y1="325" x2="648" y2="325" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="594" y="315" text-anchor="middle" font-size="12">SQL query</text>
+  <line x1="648" y1="360" x2="542" y2="360" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <text x="594" y="376" text-anchor="middle" font-size="12">data</text>
+
+  <line x1="445" y1="438" x2="445" y2="382" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="155" y1="438" x2="155" y2="382" stroke="#222" stroke-width="2" marker-end="url(#a)"/>
+
+  <text x="450" y="548" text-anchor="middle" font-size="12">Issues: SPOF - downtime during maintenance - cannot scale with traffic</text>
+</svg>
+
+
+![Simple web stack diagram](https://i.imgur.com/REPLACE_WITH_YOUR_IMAGE.png)
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| Domain name | `foobar.com`, with a `www` record pointing to the server IP `8.8.8.8` |
+| Server | 1 server (`8.8.8.8`) hosting all the components below |
+| Web server | Nginx |
+| Application server | Runs the application code |
+| Application files | The code base of the website |
+| Database | MySQL |
 
 ## What happens when a user visits www.foobar.com
 
 1. The user types `www.foobar.com` in the browser.
-2. The browser asks a DNS resolver to translate the name into an IP address.
-   The DNS answers with the `www` record of `foobar.com`, which points to
-   `8.8.8.8`.
+2. The browser asks the DNS to translate the name into an IP address. The DNS
+   answers with the `www` record of `foobar.com`: `8.8.8.8`.
 3. The browser sends an HTTP (or HTTPS) request over TCP/IP to `8.8.8.8`.
-4. The request reaches the server, where Nginx (the web server) receives it.
-5. If the request is for a static file (image, CSS, JS), Nginx serves it
-   directly. If it is for dynamic content, Nginx forwards the request to the
-   application server.
-6. The application server runs the code from the application files and, if it
-   needs data, sends queries to the MySQL database.
-7. The database returns the data, the application server builds the page and
-   gives it back to Nginx.
-8. Nginx sends the HTTP response back to the user's browser, which displays the
+4. The request reaches the server, where **Nginx** receives it.
+5. For static files (images, CSS, JS), Nginx answers directly. For dynamic
+   content, it forwards the request to the **application server**.
+6. The application server runs the code of the **application files** and, when
+   it needs data, queries the **MySQL** database.
+7. The database returns the data, and the application server builds the page
+   and sends it back to Nginx.
+8. Nginx sends the HTTP response to the user's browser, which displays the
    website.
 
 ## Specifics
 
-### What is a server
+### What is a server?
 A server is a computer (physical or virtual) that provides resources, data or
-services to other computers (clients) over a network. Here, one server hosts
-everything needed to run the website: web server, application server, code
-base and database.
+services to other computers, called clients, over a network. Here, a single
+server hosts everything needed to run the website.
 
-### What is the role of the domain name
-The domain name (`foobar.com`) is a human-readable address for the website.
-People remember names more easily than IP addresses. The domain name is
-registered with a registrar and, through the DNS, it is translated into the IP
-address of the server (`8.8.8.8`).
+### What is the role of the domain name?
+The domain name (`foobar.com`) is the human-readable address of the website.
+It is easier to remember than an IP address, and the DNS translates it into the
+IP address of the server (`8.8.8.8`).
 
-### What type of DNS record is `www` in `www.foobar.com`
-`www` is an **A record** (Address record). It maps the hostname `www` of the
-domain `foobar.com` directly to an IPv4 address, here `8.8.8.8`. (A CNAME
-record would instead map `www` to another domain name.)
+### What type of DNS record is `www` in `www.foobar.com`?
+`www` is an **A record** (Address record): it maps a hostname directly to an
+IPv4 address, here `8.8.8.8`.
 
-### What is the role of the web server
+### What is the role of the web server?
 The web server (Nginx) receives the HTTP/HTTPS requests from users. It serves
-static content directly and acts as a reverse proxy, forwarding dynamic
-requests to the application server, then returning the response to the user.
+static content directly and forwards dynamic requests to the application
+server, then returns the response to the user.
 
-### What is the role of the application server
+### What is the role of the application server?
 The application server executes the application code (the business logic). It
-processes dynamic requests, talks to the database, and generates the dynamic
-content (HTML pages, JSON, ...) that the web server sends back to the user.
+handles dynamic requests, communicates with the database, and generates the
+dynamic content that is sent back to the user.
 
-### What is the role of the database
+### What is the role of the database?
 The database (MySQL) stores, organizes and retrieves the persistent data of the
-website (users, articles, orders, ...). The application server reads and writes
-data in it using SQL queries.
+website (users, articles, orders...). The application server reads and writes
+this data with SQL queries.
 
-### What is the server using to communicate with the computer of the user
-The server communicates with the user's computer over the network (Internet)
-using the **TCP/IP** protocol suite, with **HTTP** (or **HTTPS**, which is HTTP
-secured with TLS) as the application protocol.
+### How does the server communicate with the computer of the user?
+Over the Internet, using the **TCP/IP** protocol suite, with **HTTP** (or
+**HTTPS**, which is HTTP secured with TLS) as the application protocol.
 
 ## Issues with this infrastructure
 
 ### SPOF (Single Point Of Failure)
-There is only one server, so if it fails (hardware problem, crash, power or
-network outage), or if any one component on it fails (Nginx, application
-server or MySQL), the whole website goes down.
+There is only one server. If it fails (hardware problem, crash, power or
+network outage), or if one component on it fails (Nginx, application server or
+MySQL), the whole website goes down.
 
 ### Downtime when maintenance is needed
-When maintenance is required (for example deploying new code, which requires
-restarting the web or application server, or updating the system), the
-website is unavailable during that time, because there is no other server to
-take over.
+Maintenance, such as deploying new code (which requires restarting the web
+server) or updating the system, makes the website unavailable, because no other
+server can take over in the meantime.
 
 ### Cannot scale if there is too much incoming traffic
-All the components share the resources (CPU, RAM, disk, network) of a single
-server. If the traffic grows too much, the server becomes overloaded and
-slow, and there is no way to spread the load across several servers. The only
-option is to upgrade the machine (vertical scaling), which has limits.
+All the components share the CPU, RAM, disk and network of one machine. If the
+traffic grows too much, the server becomes overloaded and slow, and the load
+cannot be spread across several servers. The only option is to upgrade the
+machine (vertical scaling), which has limits.
