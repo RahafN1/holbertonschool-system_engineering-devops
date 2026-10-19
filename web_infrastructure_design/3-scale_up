@@ -1,0 +1,77 @@
+# 3. Scale up
+
+A scaled-up version of the web infrastructure hosting **www.foobar.com**. Each
+component (web server, application server, database) now runs on its own
+server, and the load balancer is part of a cluster.
+
+## Diagram
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| Domain name | `foobar.com`, with a `www` A record pointing to `8.8.8.8` (the virtual IP shared by the load balancers) |
+| Load balancer cluster | 2 servers running HAproxy: Load balancer 1 (active) and Load balancer 2 (passive) |
+| Web server | 1 server running Nginx |
+| Application server | 1 server running the application server and the application files (code base) |
+| Database server | 1 server running MySQL |
+
+In total there are 5 servers: compared to the previous infrastructure (3
+servers), we add **1 server** and **1 load balancer**, and we **split the
+components** so that each one has its own server.
+
+## What happens when a user visits www.foobar.com
+
+1. The DNS answers the request for `www.foobar.com` with `8.8.8.8`, the virtual
+   IP of the load balancer cluster.
+2. The active load balancer (Load balancer 1) receives the request and forwards
+   it to the web server.
+3. Nginx serves the static files directly and forwards the dynamic requests to
+   the application server.
+4. The application server runs the code and queries the database server.
+5. The data and then the response travel back through the web server and the
+   load balancer to the user.
+6. If the active load balancer fails, the passive one takes over the virtual
+   IP and the website keeps working.
+
+## Specifics
+
+### Why each additional element is added
+
+- **1 additional load balancer (HAproxy, in cluster with the first one):** with
+  only one load balancer, it was a SPOF: if it failed, the whole website was
+  unreachable. The two load balancers are configured as a cluster (for
+  example with a heartbeat and a shared virtual IP, as an Active-Passive
+  setup): the active one handles the traffic, and the passive one watches it
+  and automatically takes over if it fails. This removes the SPOF at the load
+  balancer level.
+- **1 additional server:** to be able to give each component its own machine.
+  Adding servers is how we increase the capacity of the infrastructure.
+- **Web server (Nginx) on its own server:** it only receives the HTTP/HTTPS
+  requests, serves the static files and forwards the dynamic requests. Having
+  it separated means it does not compete for CPU and memory with the code or
+  the database, and it can be tuned and scaled on its own (for example, by
+  adding more web servers behind the load balancers).
+- **Application server on its own server:** it runs the application code, which
+  needs a lot of CPU and memory. Separating it allows us to give it the
+  resources it needs, and to add more application servers when the code is the
+  bottleneck, without touching the web server or the database.
+- **Database (MySQL) on its own server:** the database needs fast disks, a lot
+  of memory and strong security. On a dedicated server it is isolated (only
+  the application server needs to reach it), it is protected from the load of
+  the other components, and it can be backed up, secured and scaled (for
+  example with a Primary-Replica cluster) independently.
+
+### What the split brings
+- Each component can be **scaled independently** according to its own
+  bottleneck.
+- A problem or an overload on one component does **not directly take down the
+  others** on the same machine.
+- Each server can be **secured, tuned and maintained** for its single role.
+
+### Remaining limits
+Each of the web, application and database servers is still a single machine,
+so each one is a SPOF. The next step is to duplicate them (several web servers,
+several application servers and a replicated database) behind the load balancer
+cluster. The firewalls, the HTTPS certificate and the monitoring of the
+previous infrastructure should also be kept on this one.
