@@ -1,0 +1,105 @@
+# 1. Distributed web infrastructure
+
+A three-server web infrastructure hosting the website **www.foobar.com**.
+
+## Diagram
+
+Diagram link: https://i.imgur.com/REPLACE_WITH_YOUR_IMAGE.png
+
+![Distributed web infrastructure diagram](https://i.imgur.com/REPLACE_WITH_YOUR_IMAGE.png)
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| Domain name | `foobar.com`, with a `www` A record pointing to `8.8.8.8` (the load balancer) |
+| Load balancer | 1 server running HAproxy |
+| Server 1 | Nginx (web server), application server, application files, MySQL (**Primary**) |
+| Server 2 | Nginx (web server), application server, application files, MySQL (**Replica**) |
+
+## What happens when a user visits www.foobar.com
+
+1. The user types `www.foobar.com` in the browser.
+2. The DNS answers with the IP of the `www` record: `8.8.8.8`, the load
+   balancer.
+3. The browser sends an HTTP/HTTPS request to the load balancer.
+4. HAproxy chooses one of the two servers (Round Robin) and forwards the
+   request to its Nginx.
+5. Nginx serves static files directly, or forwards dynamic requests to the
+   application server.
+6. The application server runs the code and queries the database: writes go to
+   the Primary, reads can go to the Primary or the Replica.
+7. The response goes back through Nginx and the load balancer to the user.
+
+## Specifics
+
+### Why each additional element is added
+
+- **Second server:** to add redundancy and capacity. If one server fails or is
+  being maintained, the other can keep serving the website, and the traffic is
+  shared between two servers instead of one.
+- **Load balancer (HAproxy):** to distribute the incoming traffic between the
+  servers, so that none of them is overloaded. It also checks the health of the
+  servers and stops sending requests to one that is down, which improves
+  availability and lets us add more servers later.
+- **Database Primary-Replica cluster:** to have a live copy of the data on
+  another server (protection against data loss), to spread the read requests
+  between two databases, and to be able to promote the Replica if the Primary
+  fails.
+
+### Distribution algorithm of the load balancer
+The load balancer is configured with **Round Robin**. It sends the requests to
+the servers one after the other, in a fixed order: request 1 goes to Server 1,
+request 2 to Server 2, request 3 to Server 1 again, and so on. Each server
+receives about the same number of requests. (With the weighted version, servers
+with more resources receive more requests.)
+
+### Active-Active or Active-Passive
+This load balancer enables an **Active-Active** setup: both servers are active
+at the same time and both handle user traffic.
+
+- **Active-Active:** all the nodes receive and process requests at the same
+  time. The load is shared, so the capacity is higher, and if one node fails
+  the other nodes keep serving.
+- **Active-Passive:** only one node (the active one) handles the traffic. The
+  other node (the passive one) is on standby and takes over only when the
+  active node fails. Resources of the passive node are unused most of the time.
+
+### How a database Primary-Replica (Master-Slave) cluster works
+The **Primary** node is the main database: it accepts the write operations
+(INSERT, UPDATE, DELETE) and records every change in a binary log. The
+**Replica** node connects to the Primary, copies these changes and applies them
+to its own data, so it always holds a copy of the Primary's data (with a small
+delay). The Replica is used to answer read operations (SELECT), and as a backup
+or a substitute if the Primary fails.
+
+### Difference between the Primary node and the Replica node for the application
+- The **Primary** accepts **writes** (and reads). The application must send all
+  its write requests to the Primary.
+- The **Replica** is **read-only** for the application. It can answer read
+  requests, which reduces the load on the Primary. If the application wrote
+  directly to the Replica, the data would be different from the Primary and
+  would not be copied back.
+
+## Issues with this infrastructure
+
+### Where are the SPOF (Single Points Of Failure)?
+- **The load balancer:** there is only one. If it fails, nobody can reach the
+  website even though both servers are healthy.
+- **The Primary database:** there is only one node accepting writes. If it
+  fails, the application cannot write data until the Replica is promoted to
+  Primary (and this is not automatic here).
+- The DNS record also points to a single IP (the load balancer).
+
+### Security issues
+- **No firewall:** the servers and their services are exposed to the Internet
+  and nothing filters the incoming traffic, so any open port can be attacked.
+- **No HTTPS:** the traffic between the users and the website is not encrypted
+  (no SSL/TLS certificate), so data such as passwords can be read or modified
+  by someone intercepting it.
+
+### No monitoring
+Nothing watches the infrastructure. We have no data on the health of the
+servers (CPU, memory, disk), on the number of requests, or on errors, and
+nobody is alerted when a component fails or is overloaded, so problems are
+discovered only when users complain.
