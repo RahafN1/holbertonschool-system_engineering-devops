@@ -1,0 +1,129 @@
+# 2. Secured and monitored web infrastructure
+
+A three-server web infrastructure hosting **www.foobar.com**. It is secured
+with firewalls, serves encrypted traffic (HTTPS), and is monitored.
+
+## Diagram
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| Domain name | `foobar.com`, with a `www` A record pointing to `8.8.8.8` (the load balancer) |
+| Load balancer | HAproxy, with the SSL certificate for `www.foobar.com` |
+| Server 1 | Nginx, application server, application files, MySQL (**Primary**) |
+| Server 2 | Nginx, application server, application files, MySQL (**Replica**) |
+| 3 firewalls | One in front of the load balancer, one on Server 1, one on Server 2 |
+| 1 SSL certificate | For `www.foobar.com`, installed on the load balancer |
+| 3 monitoring clients | One on the load balancer, one on each server, sending data to the monitoring service (Sumo Logic) |
+
+## What happens when a user visits www.foobar.com
+
+1. The user types `www.foobar.com`. The DNS answers with `8.8.8.8`.
+2. The browser opens an HTTPS connection to the load balancer. The traffic goes
+   through **Firewall 1**, which only lets in the allowed ports (443, and 80 to
+   redirect to HTTPS).
+3. HAproxy uses the SSL certificate to decrypt the request and chooses a server
+   (Round Robin).
+4. The request goes through the firewall of that server (**Firewall 2** or
+   **Firewall 3**), then to Nginx, the application server and the database.
+5. The response goes back to HAproxy, which encrypts it and sends it to the
+   user.
+6. In the background, each monitoring client sends logs and metrics to the
+   monitoring service.
+
+## Specifics
+
+### Why each additional element is added
+
+- **3 firewalls:** to protect each machine by filtering the network traffic
+  (one for the load balancer, one for each server). Each machine only accepts
+  the traffic it needs, so an attacker cannot reach the other services.
+- **1 SSL certificate:** to serve `www.foobar.com` over HTTPS, so that the
+  traffic between the users and the website is encrypted and the identity of
+  the website is verified.
+- **3 monitoring clients:** to collect data (logs and metrics) from each
+  machine and send it to the monitoring service, so we can see how the
+  infrastructure behaves and be alerted when something goes wrong.
+
+### What are firewalls for
+A firewall is a security system that monitors and filters the incoming and
+outgoing network traffic according to a set of rules. It allows only the
+traffic that is needed (for example port 443 on the load balancer, and the
+traffic coming from the load balancer on the servers) and blocks everything
+else. It protects the servers from unauthorized access and attacks, and
+reduces the exposed surface (for example it hides the database port from the
+Internet).
+
+### Why the traffic is served over HTTPS
+HTTPS is HTTP encrypted with TLS (using the SSL certificate). It:
+
+- **encrypts** the data between the user and the website, so nobody on the
+  way can read it (passwords, personal data);
+- guarantees the **integrity** of the data (it cannot be modified during the
+  transfer);
+- **authenticates** the website (the certificate proves the server really is
+  `www.foobar.com`), which protects against man-in-the-middle attacks;
+- is required by modern browsers, which warn users about HTTP websites.
+
+### What monitoring is used for
+Monitoring is used to observe the health and the performance of the
+infrastructure. It allows us to detect problems quickly (a server down, high
+CPU or memory usage, errors, slow responses), to get alerts before users are
+impacted, to troubleshoot with logs, to understand the trends and plan the
+capacity (when to add servers), and to check the security and the availability
+of the website.
+
+### How the monitoring tool is collecting data
+A **monitoring client** (a data collector, or agent, such as the Sumo Logic
+collector) is installed on each server. It reads the data directly on the
+machine, such as the system metrics (CPU, memory, disk, network) and the log
+files (Nginx access and error logs, application logs, MySQL logs), and sends it
+regularly over the network to the monitoring service. The service stores the
+data, lets us search and visualize it in dashboards, and triggers alerts when a
+defined threshold is crossed.
+
+### How to monitor the web server QPS
+QPS means Queries Per Second: the number of requests the web server receives
+each second. To monitor it:
+
+1. Configure the monitoring client on each web server to collect the Nginx
+   **access log** (one line per request), or to collect the metrics of the
+   Nginx `stub_status` module (total number of requests).
+2. In the monitoring service, create a query that counts the requests per
+   second (for example, the number of log lines per minute divided by 60, or
+   the difference of the requests counter between two measures).
+3. Show it in a dashboard, for each web server and as the total of the two
+   servers.
+4. Create an alert if the QPS goes above (or drops below) a defined threshold,
+   so we are notified of a traffic peak, an attack, or a problem.
+
+## Issues with this infrastructure
+
+### Why terminating SSL at the load balancer level is an issue
+The traffic is decrypted at the load balancer, so between the load balancer
+and the web servers it travels as plain HTTP. Anybody who gets access to the
+internal network can read or modify it. The load balancer also becomes more
+critical: it holds the private key of the certificate (if it is compromised,
+the attacker can impersonate the website), it has the extra work of decrypting
+all the traffic, and it is still a single point of failure. A better design
+re-encrypts the traffic to the servers (end-to-end HTTPS) or terminates SSL on
+the web servers.
+
+### Why having only one MySQL server capable of accepting writes is an issue
+The Primary is a SPOF for the write operations. If it fails, the application
+can no longer save any data (new users, orders, comments...) until the Replica
+is promoted to Primary, which is not automatic here and means downtime or a
+read-only website. It is also a bottleneck: all the writes go to one server, so
+adding more servers does not increase the write capacity.
+
+### Why having servers with all the same components might be a problem
+Each server runs the web server, the application server and the database
+together, so they compete for the same CPU, memory and disk: for example a
+heavy database query can slow down the web server. We also cannot scale one
+component alone (if only the database needs more power, we have to duplicate
+everything), they are harder to tune and secure individually, and a problem on
+one component (a crash, an overload, a security breach) can affect all the
+others on the same machine. It is better to separate the components, with
+different servers for the web servers, the application servers and the
+databases.
